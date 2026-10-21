@@ -1,0 +1,8 @@
+"Factor","VIF"
+"Age (per year)","1.55"
+"BMI (per kg/m²)","1.22"
+"Family history of diabetes","1.01"
+"Minority ethnicity","1.00"
+"Previous pregnancies (per pregnancy)","1.64"
+"Education (per year)","1.12"
+"HGOIA vs CSP2","1.03"

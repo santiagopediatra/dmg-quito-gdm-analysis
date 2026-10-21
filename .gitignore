@@ -1,0 +1,11 @@
+*.xlsx
+*.xls
+*.csv.bak
+*.rds
+*.RData
+.Rhistory
+.Rproj.user/
+data/*
+!data/README.md
+~$*
+claves_identificacion*
