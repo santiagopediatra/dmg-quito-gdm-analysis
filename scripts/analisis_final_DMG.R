@@ -95,7 +95,7 @@ tab_imc <- rbind(
 tab_imc[2, 5] <- fp(fisher.test(table(d$imc_oms, d$dmg))$p.value)   # Fisher: celda con 0
 colnames(tab_imc) <- c("Characteristic", "Overall", "GDM", "No GDM", "p")
 print(tab_imc, quote = FALSE)
-write.csv(tab_imc, "resultados/07_tabla1_imculado.csv", row.names = FALSE)
+write.csv(tab_imc, "resultados/final_tabla1_imc.csv", row.names = FALSE)
 
 np <- function(x, n) sprintf("%d/%d (%.1f%%)", x, n, 100 * x / n)
 ci3 <- function(m, v, t) exp(coef(m)[t] + c(0, -1, 1) * 1.959964 * sqrt(v[t, t]))
