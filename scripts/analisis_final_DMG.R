@@ -6,9 +6,8 @@
 ## =====================================================================
 suppressPackageStartupMessages({ library(readxl); library(sandwich); library(lmtest) })
 ## ---------- 0. Datos ----------
-cand <- unique(normalizePath(c(list.files("data", pattern = "^BASE PREVALENCIA.*\\.xlsx$", full.names = TRUE),
-          list.files(".",  pattern = "^BASE PREVALENCIA.*\\.xlsx$", full.names = TRUE),
-          list.files("..", pattern = "^BASE PREVALENCIA.*\\.xlsx$", full.names = TRUE)), mustWork = TRUE))
+cand <- c(list.files(".",  pattern = "^BASE PREVALENCIA.*\\.xlsx$", full.names = TRUE),
+          list.files("..", pattern = "^BASE PREVALENCIA.*\\.xlsx$", full.names = TRUE))
 stopifnot("No se encontró el Excel (o hay más de uno)" = length(cand) == 1)
 md5_ini <- unname(tools::md5sum(cand))
 d <- as.data.frame(read_excel(cand, sheet = "1 HEMI", .name_repair = "minimal"))
@@ -198,6 +197,25 @@ write.csv(seqt, "resultados/final_secuencial.csv", row.names = FALSE)
 
 cat("\n== Tabla 3\n"); print(t3, row.names = FALSE)
 cat("\n== Tabla 4\n"); print(t4, quote = FALSE)
+
+
+## ---------- Sensibilidad: definición de DMG en los modelos de desenlaces ----------
+## (a) D1 excluyendo el caso en rango de diabetes franca; (b) D2 positiva vs D2 no positiva (evaluables, sin diabetes franca)
+sens_def <- function(dat) {
+  mt <- dat[!is.na(dat$ces), ]; s <- mt[mt$singleton == 1, ]
+  ev <- function(y, x) sprintf("%d/%d vs %d/%d", sum(x[[y]][x$dmg == 1], na.rm = TRUE), sum(!is.na(x[[y]][x$dmg == 1])),
+                               sum(x[[y]][x$dmg == 0], na.rm = TRUE), sum(!is.na(x[[y]][x$dmg == 0])))
+  rbind(c("Cesarean delivery", ev("ces", mt), fmt(ces_std(mt, "imc"))),
+        c("Hypertensive disorders", ev("hta", mt), fmt(pois(hta ~ dmg + imc + EDAD + gestas, mt))),
+        c("Macrosomia (≥4000 g)", ev("macro", s), fmt(pois(macro ~ dmg + imc + EDAD, s))),
+        c("Large for gestational age", ev("lga", s), fmt(pois(lga ~ dmg + imc + EDAD, s))))
+}
+dA_ <- d[!d$overt, ]
+dB_ <- d[d$d2_eval & !d$overt, ]; dB_$dmg <- dB_$d2
+sdef <- cbind(sens_def(dA_), sens_def(dB_)[, 2:3])
+colnames(sdef) <- c("Outcome", "D1_noovert_events", "D1_noovert_RR", "D2_events", "D2_RR")
+write.csv(sdef, "resultados/final_sens_definicion.csv", row.names = FALSE)
+print(sdef, quote = FALSE)
 
 ## ---------- Verificación de resultados finales ----------
 stopifnot(t2$Overall[2] == "52/521 (10.0%; 7.7–12.9)", t3$Adjusted[3] == "1.66 (1.11–2.49)",
