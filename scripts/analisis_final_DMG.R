@@ -145,7 +145,8 @@ write.csv(diag_A, "resultados/final_vif_modeloA.csv", row.names = FALSE)
 ## ---------- Tabla 4: desenlaces ----------
 mat <- d[!is.na(d$ces), ]; sg <- mat[mat$singleton == 1, ]
 stopifnot(nrow(mat) == 517, nrow(sg) == 510)
-sg$apgar5 <- sg$`CODIGO APGAR <7 ( 5 minutos)`
+## Apgar <7 a los 5 min derivado de la puntuación numérica registrada (dato primario; el código clínico es discordante: ver Tabla S5)
+sg$apgar5 <- as.integer(sg$`*APGAR 5 MINUTOS` < 7)
 sg$anom   <- sg$`codigo defectos congenitos si no`
 sg$pret   <- as.integer(grepl("^Pret", sg$`*EG RN`))
 cnt <- function(y, dat) c(np(sum(dat[[y]][dat$dmg == 1], na.rm = TRUE), sum(!is.na(dat[[y]][dat$dmg == 1]))),
@@ -213,9 +214,28 @@ sens_def <- function(dat) {
 dA_ <- d[!d$overt, ]
 dB_ <- d[d$d2_eval & !d$overt, ]; dB_$dmg <- dB_$d2
 sdef <- cbind(sens_def(dA_), sens_def(dB_)[, 2:3])
-colnames(sdef) <- c("Outcome", "D1_noovert_events", "D1_noovert_RR", "D2_events", "D2_RR")
+## (c) D1 con ajuste adicional por establecimiento de captación
+mt_ <- d[!is.na(d$ces), ]; s_ <- mt_[mt_$singleton == 1, ]
+ces_site <- function(dat, B = 2000) {
+  f <- ces ~ dmg + ces_prev + imc + EDAD + gestas + hgoia
+  dat <- dat[complete.cases(dat[, all.vars(f)]), ]
+  rr <- function(x) { m <- glm(f, family = binomial, data = x)
+    mean(predict(m, transform(x, dmg = 1), type = "response")) / mean(predict(m, transform(x, dmg = 0), type = "response")) }
+  set.seed(2026); bt <- replicate(B, rr(dat[sample(nrow(dat), replace = TRUE), ]))
+  c(rr(dat), quantile(bt, c(.025, .975))) }
+site_rr <- c(fmt(ces_site(mt_)), fmt(pois(hta ~ dmg + imc + EDAD + gestas + hgoia, mt_)),
+             fmt(pois(macro ~ dmg + imc + EDAD + hgoia, s_)), fmt(pois(lga ~ dmg + imc + EDAD + hgoia, s_)))
+sdef <- cbind(sdef, site_rr)
+colnames(sdef) <- c("Outcome", "D1_noovert_events", "D1_noovert_RR", "D2_events", "D2_RR", "D1_site_RR")
 write.csv(sdef, "resultados/final_sens_definicion.csv", row.names = FALSE)
 print(sdef, quote = FALSE)
+## Estabilidad con pocos eventos: RR al excluir uno a uno los recién nacidos con el evento (D1, modelo principal)
+loo <- function(y) { ids <- s_$id[!is.na(s_[[y]]) & s_[[y]] == 1]
+  r <- sapply(ids, function(i) pois(as.formula(paste(y, "~ dmg + imc + EDAD")), s_[s_$id != i, ])[1])
+  sprintf("%.2f–%.2f", min(r), max(r)) }
+loo_tab <- data.frame(Outcome = c("Macrosomia (≥4000 g)", "Large for gestational age"), LOO_range = c(loo("macro"), loo("lga")))
+write.csv(loo_tab, "resultados/final_loo.csv", row.names = FALSE)
+print(loo_tab)
 
 ## ---------- Verificación de resultados finales ----------
 stopifnot(t2$Overall[2] == "52/521 (10.0%; 7.7–12.9)", t3$Adjusted[3] == "1.66 (1.11–2.49)",
