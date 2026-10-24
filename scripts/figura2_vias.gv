@@ -1,0 +1,33 @@
+// figura2_vias.gv — Figure 2: diagnostic pathways D1/D2 (reconstructed from the submitted image)
+// Render: Rscript scripts/render_frontiers.R
+digraph pathways {
+  graph [size="7.087,8.858!", ratio=compress, rankdir=TB, nodesep=0.25, ranksep=0.5, bgcolor=white];
+  node  [shape=box, style="rounded,filled", fillcolor="#F3F4F6", color="#5B6770", penwidth=2.2,
+         fontname="DejaVu Sans", fontsize=9, margin="0.10,0.08"];
+  edge  [color="#5B6770", penwidth=2.2, arrowsize=0.8];
+
+  cohort [label="Analysed cohort, n = 523\nRecorded GDM (D1): 75\n\nFirst glucose criterion met (hierarchical order):", fillcolor="#E1E8EF", fontsize=10];
+
+  early  [label="Early fasting glucose\n92–125 mg/dL\nn = 23\n(GDM 22; no GDM 1)"];
+  ogtt   [label="Positive OGTT\n(early criterion absent)\nn = 29\n(GDM 28; no GDM 1)"];
+  overt  [label="OGTT in overt-\ndiabetes range\nn = 1\n(GDM 1)"];
+  late   [label="Late fasting glucose\n92–125 mg/dL only\nn = 25\n(GDM 24; no GDM 1)"];
+  none   [label="No criterion met\nn = 445\n(no GDM 445)"];
+
+  d2     [label="D2: early fasting glucose or OGTT\n(late fasting glucose and overt range excluded)\n52/521 evaluable = 10.0% (95% CI 7.7–12.9)", fillcolor=white];
+  d1     [label="D1: recorded GDM\n75/523 = 14.3%\n(95% CI 11.6–17.6)", fillcolor=white];
+  ogttav [label="OGTT values available: 71/523 (13.6%)\nAbove GDM thresholds: 40/71 = 56.3% (95% CI 44.8–67.3)\nSelected women — not a cohort frequency", fillcolor="#FFF5D6"];
+
+  cohort -> {early ogtt overt late none};
+  {rank=same; early -> ogtt -> overt [style=invis]}
+  {rank=same; late -> none [style=invis]}
+  overt -> late [style=invis];
+
+  early -> d2 [style=dashed, dir=none];
+  ogtt  -> d2 [style=dashed, dir=none];
+  {rank=same; d2 -> d1 [style=invis]}
+  late -> d2 [style=invis];
+  none -> d1 [style=invis];
+  d2 -> ogttav [style=invis];
+  d1 -> ogttav [style=invis];
+}

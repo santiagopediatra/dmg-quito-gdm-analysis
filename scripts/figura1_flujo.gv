@@ -1,0 +1,40 @@
+// figura1_flujo.gv — Figure 1: flow of participants (reconstructed from the submitted image)
+// Render: Rscript scripts/render_frontiers.R
+digraph flow {
+  graph [size="3.346,8.85!", ratio=compress, rankdir=TB, nodesep=0.12, ranksep=0.10, splines=line, bgcolor=white];
+  node  [shape=box, group=main, style=filled, fillcolor="#F3F4F6", color="#5B6770", penwidth=2.4,
+         fontname="DejaVu Sans", fontsize=10, width=1.45, margin="0.04,0.03"];
+  edge  [color="#5B6770", penwidth=2.4, arrowsize=0.6];
+
+  // Main column
+  invited    [label="Women invited at the\nfirst prenatal visit\nn = 629"];
+  recruited  [label="Recruited (<14 weeks\nof gestation)\nn = 593"];
+  eligible   [label="Eligible women (n =\n582)"];
+  analysed   [label="Analysed cohort\nn = 523\nCSP2 321; HGOIA 202\nRecorded GDM 75; no\nGDM 448", fillcolor="#E1E8EF"];
+  maternal   [label="Maternal outcomes\nn = 517\nGDM 75; no GDM 442"];
+  neonatal   [label="Neonatal outcomes\n(singleton\npregnancies)\nn = 510\nGDM 74; no GDM 436", fillcolor="#E1E8EF"];
+
+  // Side boxes
+  node [fillcolor=white, fontsize=9, width=1.45, group=""];
+  declined   [label="Declined to\nparticipate\nn = 36"];
+  excluded   [label=<Excluded after<br align="left"/>recruitment, n = 11<br align="left"/>Preexisting diabetes,<br align="left"/>3<br align="left"/>Chronic hypertension,<br align="left"/>3<br align="left"/>Corticosteroid use, 1<br align="left"/>Fasting glucose ≥126<br align="left"/>mg/dL at first test, 4<br align="left"/>>];
+  lost       [label=<Did not complete<br align="left"/>follow-up, n = 59<br align="left"/>Discontinued prenatal<br align="left"/>care at study sites,<br align="left"/>44<br align="left"/>Requested that data<br align="left"/>not be used, 7<br align="left"/>Voluntary withdrawal,<br align="left"/>4<br align="left"/>Spontaneous abortion,<br align="left"/>2<br align="left"/>Missed abortion, 1<br align="left"/>Fetal death, 1<br align="left"/>>];
+  nodelivery [label="No delivery data\nn = 6 (none with GDM)"];
+  twins      [label="Twin pregnancies\nexcluded\nn = 7 (GDM 1; no GDM\n6)"];
+
+  // Branch points on the main line
+  node [shape=point, width=0.01, height=0.01, label="", group=main];
+  p1; p2; p3; p4; p5;
+
+  edge [dir=none];
+  invited -> p1; recruited -> p2; eligible -> p3; analysed -> p4; maternal -> p5;
+  edge [dir=forward];
+  p1 -> recruited; p2 -> eligible; p3 -> analysed; p4 -> maternal; p5 -> neonatal;
+  p1 -> declined; p2 -> excluded; p3 -> lost; p4 -> nodelivery; p5 -> twins;
+
+  {rank=same; p1; declined}
+  {rank=same; p2; excluded}
+  {rank=same; p3; lost}
+  {rank=same; p4; nodelivery}
+  {rank=same; p5; twins}
+}

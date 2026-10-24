@@ -1,0 +1,3 @@
+## Copie este archivo como config_local.R (no versionado) y escriba la ruta local al Excel de datos.
+## Alternativa: definir la variable de entorno DMG_DATA_PATH, que tiene prioridad sobre este archivo.
+DMG_DATA_PATH <- "/ruta/local/BASE PREVALENCIA 15 JULIO .xlsx"

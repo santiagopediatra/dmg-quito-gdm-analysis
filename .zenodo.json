@@ -1,0 +1,17 @@
+{
+  "title": "dmg-quito-final: analysis code for 'Gestational diabetes mellitus detected under routine risk-based screening in Quito, Ecuador'",
+  "upload_type": "software",
+  "version": "1.0.0",
+  "publication_date": "2026-10-24",
+  "license": "MIT",
+  "access_right": "open",
+  "description": "<p>R code for a prospective cohort study of gestational diabetes mellitus (GDM) in 523 pregnant women in Quito, Ecuador (2021–2023). It estimates GDM cumulative incidence under the recorded diagnosis and a restricted operational definition, factors associated with GDM, and maternal and neonatal outcomes.</p><p>Individual-level data are not included, under approval CEISH-UCE 017-CEISH.UCE.2021 and Ecuador's Organic Law on Personal Data Protection. They are available upon reasonable request to the corresponding author (ptoapanta@uce.edu.ec).</p>",
+  "creators": [
+    {"name": "Toapanta-Pinta, Paola"},
+    {"name": "Vasco-Morales, Santiago"},
+    {"name": "Céspedes-Granda, Sara"},
+    {"name": "Saes Sartorelli, Daniela"},
+    {"name": "Dantas Moisés, Elaine Christine"}
+  ],
+  "keywords": ["gestational diabetes", "screening", "Ecuador", "cohort", "R"]
+}

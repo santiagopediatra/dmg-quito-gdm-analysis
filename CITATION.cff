@@ -1,0 +1,32 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it using these metadata."
+type: software
+title: "dmg-quito-final: analysis code for 'Gestational diabetes mellitus detected under routine risk-based screening in Quito, Ecuador'"
+version: 1.0.0
+date-released: 2026-10-24
+license: MIT
+repository-code: "https://github.com/santiagopediatra/dmg-quito-gdm-analysis"
+authors:
+  - given-names: Paola
+    family-names: Toapanta-Pinta
+    email: ptoapanta@uce.edu.ec
+  - given-names: Santiago
+    family-names: Vasco-Morales
+  - given-names: Sara
+    family-names: Céspedes-Granda
+  - given-names: Daniela
+    family-names: Saes Sartorelli
+  - given-names: Elaine Christine
+    family-names: Dantas Moisés
+abstract: >-
+  R code for a prospective cohort study of gestational diabetes mellitus (GDM)
+  in 523 pregnant women in Quito, Ecuador (2021-2023). It estimates GDM
+  cumulative incidence under the recorded diagnosis and a restricted
+  operational definition, factors associated with GDM, and maternal and
+  neonatal outcomes. Individual-level data are not included.
+keywords:
+  - gestational diabetes
+  - screening
+  - Ecuador
+  - cohort
+  - R

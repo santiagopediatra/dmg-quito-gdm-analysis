@@ -1,14 +1,18 @@
 ## =====================================================================
 ## analisis_final_DMG.R — Análisis final: DMG en Quito (cohorte CSP2 + HGOIA, N = 523)
 ## IMC = peso (kg) / talla (m)^2. D1 = DMG registrada; D2 = definición operacional restringida.
-## Ejecutar desde reanalisis_dmg:  source("scripts/analisis_final_DMG.R", encoding = "UTF-8")
+## Ejecutar desde la raíz del repositorio:  source("scripts/analisis_final_DMG.R", encoding = "UTF-8")
 ## Paquetes: readxl, sandwich, lmtest. No modifica el Excel. Salidas en resultados/final_*.csv
 ## =====================================================================
 suppressPackageStartupMessages({ library(readxl); library(sandwich); library(lmtest) })
 ## ---------- 0. Datos ----------
-cand <- c(list.files(".",  pattern = "^BASE PREVALENCIA.*\\.xlsx$", full.names = TRUE),
-          list.files("..", pattern = "^BASE PREVALENCIA.*\\.xlsx$", full.names = TRUE))
-stopifnot("No se encontró el Excel (o hay más de uno)" = length(cand) == 1)
+## Ruta al Excel privado: variable de entorno DMG_DATA_PATH o config_local.R (no versionado; ver config_local.R.example)
+if (file.exists("config_local.R")) source("config_local.R", local = TRUE)
+cand <- Sys.getenv("DMG_DATA_PATH", if (exists("DMG_DATA_PATH")) DMG_DATA_PATH else "")
+if (!nzchar(cand) || !file.exists(cand))
+  stop("No se encontró el Excel de datos (ruta: '", cand, "'). Defina la ruta en la variable de entorno ",
+       "DMG_DATA_PATH o en config_local.R (copie config_local.R.example). ",
+       "Los datos no son públicos: ver data/README.md.", call. = FALSE)
 md5_ini <- unname(tools::md5sum(cand))
 d <- as.data.frame(read_excel(cand, sheet = "1 HEMI", .name_repair = "minimal"))
 names(d) <- trimws(names(d)); names(d)[1] <- "id"
@@ -39,8 +43,9 @@ d$lga      <- ifelse(is.na(d$`*PESO PARA EDAD`), NA, as.integer(trimws(d$`*PESO 
 d$macro    <- as.integer(d$`KG RN` >= 4000)
 d$hipo     <- d$`CODIGO HIPOGLICEMIA`
 d$poli     <- d$`COIGO POLICITEMIA`
-gemelares  <- c(43, 52, 100, 101, 398, 401, 488)   # identificados por cruce con Hoja2 (EMBARAZO GEMELAR = SI)
-stopifnot(all(gemelares %in% d$id))
+h2 <- as.data.frame(read_excel(cand, sheet = "Hoja2", .name_repair = "minimal")); names(h2) <- trimws(names(h2))
+gemelares  <- h2[[1]][trimws(toupper(h2$`EMBARAZO GEMELAR`)) %in% "SI"]   # embarazos gemelares: Hoja2, EMBARAZO GEMELAR = SI
+stopifnot(length(gemelares) == 7, all(gemelares %in% d$id))
 d$singleton <- as.integer(!d$id %in% gemelares)
 ## D1 / D2
 f1 <- d$`GLICEMIA ANTES DE 20 SEMANAS`
@@ -52,7 +57,7 @@ d$d2 <- ifelse(d$d2_eval, as.integer((!is.na(f1) & f1 >= 92 & f1 < 126) | og_pos
 stopifnot(sum(d$d2, na.rm = TRUE) == 53, sum(d$d2_eval) == 521)
 ## Diabetes franca (WHO 2013): ayunas >=126 o 2 h >=200 mg/dL en la PTOG -> no se cuenta como DMG en D2
 d$overt <- (!is.na(d$AYUNAS) & d$AYUNAS >= 126) | (!is.na(d$`2 HORA`) & d$`2 HORA` >= 200)
-stopifnot(sum(d$overt) == 1, d$id[d$overt] == 17)
+stopifnot(sum(d$overt) == 1)
 d$d2 <- ifelse(d$d2_eval, as.integer(d$d2 == 1 & !d$overt), NA)
 stopifnot(sum(d$d2, na.rm = TRUE) == 52)
 
@@ -121,6 +126,18 @@ pv <- as.data.frame.matrix(table(factor(via, c("Early fasting glucose 92–125 m
         "OGTT in overt-diabetes range", "Late fasting glucose 92–125 mg/dL only", "No criterion met")), factor(d$dmg, 0:1, c("No GDM", "GDM"))))
 pv$Total <- rowSums(pv)
 write.csv(cbind(Pathway = rownames(pv), pv), "resultados/final_vias.csv", row.names = FALSE)
+## Figura 2: disponibilidad y positividad de la PTOG (IC Wilson) por sitio, y conteos por vía diagnóstica
+og_av <- !is.na(d$AYUNAS) | !is.na(d$`1 HORA`) | !is.na(d$`2 HORA`)
+og_site <- function(lab, sel) data.frame(Measure = c("OGTT values available", "OGTT above GDM thresholds"), Group = lab,
+  Count = c(sum(og_av[sel]), sum(og_pos[sel])), Denominator = c(sum(sel), sum(og_av[sel])),
+  Estimate = c(wilson(sum(og_av[sel]), sum(sel)), wilson(sum(og_pos[sel]), sum(og_av[sel]))))
+fig2 <- rbind(og_site("Overall", rep(TRUE, nrow(d))), og_site("CSP2", d$ZONA == "CSP2"), og_site("HGOIA", d$ZONA == "HGOIA"),
+  data.frame(Measure = rep(rownames(pv), each = 3), Group = rep(c("All", "GDM", "No GDM"), nrow(pv)),
+             Count = as.vector(rbind(pv$Total, pv$GDM, pv$`No GDM`)), Denominator = nrow(d), Estimate = ""))
+stopifnot(fig2$Estimate[1:2] == c("71/523 (13.6%; 10.9–16.8)", "40/71 (56.3%; 44.8–67.3)"),
+          fig2$Count[1:6] == c(71, 40, 46, 19, 25, 21), fig2$Denominator[1:6] == c(523, 71, 321, 46, 202, 25),
+          pv$Total == c(23, 29, 1, 25, 445), pv$GDM == c(22, 28, 1, 24, 0))
+write.csv(fig2, "resultados/final_ogtt_figura2.csv", row.names = FALSE)
 print(t2); print(cx); print(pv)
 
 ## ---------- Tabla 3: factores asociados ----------
